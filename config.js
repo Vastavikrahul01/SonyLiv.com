@@ -4,8 +4,8 @@ window.DEFAULT_M3U8 = "";
 
 // JOIN_LINKS: up to 4 buttons (title and url)
 window.JOIN_LINKS = [
-  { title: "JOIN CHANNEL 1", url: "https://t.me/your_channel_1" },
-  { title: "JOIN CHANNEL 2", url: "https://t.me/your_channel_2" },
-  { title: "JOIN CHANNEL 3", url: "https://t.me/your_channel_3" },
-  { title: "JOIN CHANNEL 4", url: "https://t.me/your_channel_4" }
+  { title: "JOIN CHANNEL 1", url: "https://t.me/+nNHw3VTZ7hZhNTUx" },
+  { title: "JOIN CHANNEL 2", url: "https://t.me/+zbDGkmX2EqFkMTRh" },
+  { title: "JOIN CHANNEL 3", url: "https://t.me/+nNHw3VTZ7hZhNTUx" },
+  { title: "JOIN CHANNEL 4", url: "https://t.me/+zbDGkmX2EqFkMTRh" }
 ];
