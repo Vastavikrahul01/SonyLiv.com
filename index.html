@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YouTube-style HLS Player</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <h1>Live Stream</h1>
+      <div class="controls-top">
+        <label for="aspect">Aspect:</label>
+        <select id="aspect">
+          <option value="16-9" selected>16:9 (Default)</option>
+          <option value="4-3">4:3</option>
+          <option value="21-9">21:9</option>
+          <option value="stretch">Stretch (fill)</option>
+        </select>
+        <button id="cinemaBtn" title="Toggle Cinema Mode">Cinema</button>
+        <button id="fsBtn" title="Fullscreen">Fullscreen</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="player-wrap aspect-16-9" id="playerWrap">
+        <video id="video" controls playsinline></video>
+      </section>
+
+      <section class="join-grid" id="joinGrid">
+        <!-- Buttons are generated from config.js -->
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>Edit <code>config.js</code> to change default stream and JOIN links.</small>
+    </footer>
+  </div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  const video = document.getElementById('video');
+  const aspectSel = document.getElementById('aspect');
+  const playerWrap = document.getElementById('playerWrap');
+  const cinemaBtn = document.getElementById('cinemaBtn');
+  const fsBtn = document.getElementById('fsBtn');
+  const joinGrid = document.getElementById('joinGrid');
+
+  // Load default M3U8 from config
+  const defaultSrc = window.DEFAULT_M3U8 || "";
+
+  function initHls(src){
+    if(!src) return;
+    if(window.hls){
+      try { window.hls.destroy(); } catch(e){}
+      window.hls = null;
+    }
+    if(Hls.isSupported()){
+      const hls = new Hls();
+      window.hls = hls;
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        // keep paused on load, to mimic YouTube behaviour don't autoplay in mobile browsers
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src;
+    }
+  }
+
+  // Initialize with default
+  if(defaultSrc) initHls(defaultSrc);
+
+  // Aspect ratio handling
+  const aspectClasses = {
+    "16-9":"aspect-16-9",
+    "4-3":"aspect-4-3",
+    "21-9":"aspect-21-9",
+    "stretch":"aspect-stretch"
+  };
+  aspectSel.addEventListener('change', ()=>{
+    const val = aspectSel.value;
+    // remove existing aspect classes
+    Object.values(aspectClasses).forEach(c=> playerWrap.classList.remove(c));
+    playerWrap.classList.add(aspectClasses[val]);
+  });
+
+  // Cinema mode toggle
+  let cinema = false;
+  cinemaBtn.addEventListener('click', ()=>{
+    cinema = !cinema;
+    document.body.classList.toggle('cinema-mode', cinema);
+    cinemaBtn.classList.toggle('active', cinema);
+  });
+
+  // Fullscreen
+  fsBtn.addEventListener('click', ()=>{
+    if (!document.fullscreenElement) {
+      playerWrap.requestFullscreen().catch(err => { console.warn('FS failed', err); });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  // Generate 4 JOIN NOW buttons from config
+  const links = window.JOIN_LINKS && Array.isArray(window.JOIN_LINKS) ? window.JOIN_LINKS : [
+    {title:"JOIN 1", url:"#"},
+    {title:"JOIN 2", url:"#"},
+    {title:"JOIN 3", url:"#"},
+    {title:"JOIN 4", url:"#"}
+  ];
+
+  function makeButton(l){
+    const a = document.createElement('a');
+    a.className = 'join-btn';
+    a.href = l.url || '#';
+    a.target = '_blank';
+    a.innerText = l.title || l.url || 'JOIN';
+    return a;
+  }
+  joinGrid.innerHTML = '';
+  links.slice(0,4).forEach(l => joinGrid.appendChild(makeButton(l)));
+
+  // Optional: clicking a join button can also load its stream if specified as m3u8
+  joinGrid.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(t.matches('.join-btn')){
+      const href = t.getAttribute('href')||'';
+      // if href points to a .m3u8, load it into player
+      if(href.indexOf('.m3u8') !== -1){
+        initHls(href);
+        // scroll to player (mobile)
+        setTimeout(()=> playerWrap.scrollIntoView({behavior:'smooth', block:'center'}), 200);
+      }
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
